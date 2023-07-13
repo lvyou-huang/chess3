@@ -23,12 +23,15 @@ func Register(name string, password string) error {
 }
 
 func Login(name string, password string, c *gin.Context) error {
-	var user struct {
-		Id       int
-		Name     string
-		Password string
-	}
-	Db, err := dao.OpenDb()
+	var (
+		user struct {
+			Id       int
+			Name     string
+			Password string
+		}
+		Db, err = dao.OpenDb()
+	)
+
 	if err != nil {
 		log.Println(err)
 		return err

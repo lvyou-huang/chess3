@@ -1,12 +1,15 @@
 package service
 
-func NewHub() *Hub {
-	return &Hub{Broadcast: make(chan string),
-		Clients:    make(map[*Client]struct{}),
-		Register:   make(chan *Client),
-		Unregister: make(chan *Client)}
+import "chess/model"
+
+func NewHub() *model.Hub {
+	return &model.Hub{Broadcast: make(chan string),
+		Clients:    make(map[*model.Client]struct{}),
+		Register:   make(chan *model.Client),
+		Unregister: make(chan *model.Client)}
 }
-func (hub Hub) Run() {
+
+func Run(hub model.Hub) {
 	for {
 		select {
 		case client := <-hub.Register:

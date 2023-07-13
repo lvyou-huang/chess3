@@ -7,6 +7,12 @@ import (
 	"log"
 )
 
+func SetupRouter() *gin.Engine {
+	router := gin.Default()
+
+	return router
+}
+
 // 注册
 func Register(c *gin.Context) {
 	data, _ := c.GetRawData()

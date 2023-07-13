@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-type Hub struct {
+/*type Hub struct {
 	Broadcast  chan string          //broadcast管道里有数据时把它写入每一个Client的send管道中
 	Clients    map[*Client]struct{} //Hub持有每个client的指针
 	Register   chan *Client         //注册管道
@@ -25,7 +25,7 @@ type Client struct {
 	Send  chan []byte
 	Name  []byte
 	Chess *model.Chess_Table
-}
+}*/
 
 const (
 	writeWait  = 10 * time.Second  //
@@ -34,7 +34,7 @@ const (
 	maxMsgSize = 512               //消息的长度不能超过512
 )
 
-func ServeWS(hub *Hub, w http.ResponseWriter, r *http.Request, chess *model.Chess_Table) {
+func ServeWS(hub *model.Hub, w http.ResponseWriter, r *http.Request, chess *model.Chess_Table) {
 	upgrader := websocket.Upgrader{
 		HandshakeTimeout: 2 * time.Second, //握手超时时间
 		ReadBufferSize:   1024,            //读缓冲大小
@@ -49,12 +49,13 @@ func ServeWS(hub *Hub, w http.ResponseWriter, r *http.Request, chess *model.Ches
 	}
 	fmt.Printf("connect to client %s\n", conn.RemoteAddr().String())
 
-	client := &Client{Hub: hub, Conn: conn, Send: make(chan []byte, 256), Chess: chess}
+	client := &model.Client{Hub: hub, Conn: conn, Send: make(chan []byte, 256), Chess: chess}
 	hub.Register <- client
-	go client.read()
-	go client.write()
+	go Read(client)
+	go Write(client)
 }
-func (client *Client) write() {
+
+func Write(client *model.Client) {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop() //ticker不用就stop，防止协程泄漏
@@ -98,7 +99,7 @@ func (client *Client) write() {
 }
 
 // 从websocket读取数据
-func (client *Client) read() {
+func Read(client *model.Client) {
 	defer func() {
 		client.Hub.Unregister <- client //向hub发送注销
 		fmt.Printf("%s offline\n", client.Name)
@@ -282,7 +283,6 @@ func (client *Client) read() {
 		}
 	}
 }
-
 func ServeHome(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.Error(w, "Not Found", http.StatusNotFound)
